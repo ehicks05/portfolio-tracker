@@ -5,13 +5,10 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "serve": "vite preview",
-
-        "prettier": "prettier --ignore-path .gitignore \"**/*.+(ts|tsx|js|jsx|json|css|md|mdx|html)\"",
+    "prettier": "prettier --ignore-path .gitignore \"**/*.+(ts|tsx|js|jsx|json|css|md|mdx|html)\"",
     "format": "npm run prettier -- --write",
     "check-format": "npm run prettier -- --list-different",
-
-        "lint": "eslint --ignore-path .gitignore \"**/*.+(js|jsx)\""
-
+    "lint": "eslint --ignore-path .gitignore \"**/*.+(js|jsx)\""
   },
   "dependencies": {
     "react": "^17.0.0",
