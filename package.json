@@ -1,5 +1,5 @@
 {
-  "name": "vite-project",
+  "name": "portfolio-tracker",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
@@ -11,10 +11,12 @@
     "lint": "eslint --ignore-path .gitignore \"**/*.+(js|jsx)\""
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.175",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "@vitejs/plugin-react": "^1.0.0",
