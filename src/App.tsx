@@ -1,22 +1,186 @@
-import { useState } from "react";
+import { useState, useEffect, FC } from "react";
+import _ from "lodash";
+import { getStockQuotes, getCryptoQuote } from "./api";
+import accounts from "./accounts.ts";
+import { Portfolio, Account, Holding, Quote, Quotes } from "./types";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [quotes, setQuotes] = useState<Quotes>({});
+  const [portfolio, setPortfolio] = useState<Portfolio>(accounts);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const toSymbols = (accounts: Account[]) =>
+        accounts.flatMap((account) =>
+          account.holdings.map((holding) => holding.symbol)
+        );
+
+      const [cryptoSymbols, tradSymbols] = _.partition(portfolio.accounts, {
+        crypto: true,
+      }).map(toSymbols);
+
+      const stockQuotes: Quotes = await getStockQuotes(tradSymbols);
+
+      const cryptoQuotes = await Promise.all(
+        cryptoSymbols.map((cryptoSymbol) => getCryptoQuote(cryptoSymbol))
+      );
+      const reduced: Quotes = cryptoQuotes.reduce(
+        (agg, cur) => ({
+          ...agg,
+          [cur.symbol]: { quote: cur },
+        }),
+        {}
+      );
+
+      const quotes = Object.fromEntries([
+        ...Object.entries(stockQuotes),
+        ...Object.entries(reduced),
+      ]);
+      console.log(quotes);
+      setQuotes(quotes);
+    };
+    fetchData();
+  }, []);
+
+  if (Object.keys(quotes).length === 0) return <div>loading</div>;
 
   return (
-    <div className="">
-      <header className="App-header">
-        <p>Hello Vite + React!</p>
-        <p>
-          <button type="button" onClick={() => setCount((count) => count + 1)}>
-            count is: {count}
-          </button>
-        </p>
-        <p>sup my dude</p>
-        <p></p>
+    <div>
+      <header className="max-w-screen-xl mx-auto p-4 text-3xl">
+        Portfolio
       </header>
+      <section className="max-w-screen-xl mx-auto p-4">
+        <Table>
+          {portfolio.accounts.map((account) => (
+            <AccountTable
+              key={account.label}
+              account={account}
+              quotes={quotes}
+            />
+          ))}
+          <tfoot>
+            <TR>
+              <TD className="pt-4 text-xl">{"Summary"}</TD>
+            </TR>
+            <TR>
+              <TD></TD>
+              <TD></TD>
+              <TD></TD>
+              <TD className="text-gray-500">Val</TD>
+              <TD></TD>
+            </TR>
+            <TR>
+              <TD>Total</TD>
+              <TD></TD>
+              <TD></TD>
+              <TD>
+                {format(
+                  portfolio.accounts.reduce((agg, curr) => {
+                    const total =
+                      agg +
+                      curr.holdings.reduce((agg, curr) => {
+                        const price = quotes[curr.symbol].quote.latestPrice;
+                        return (agg += curr.quantity * Number(price));
+                      }, 0);
+                    return _.round(total, 2);
+                  }, 0)
+                )}
+              </TD>
+              <TD></TD>
+            </TR>
+          </tfoot>
+        </Table>
+      </section>
     </div>
   );
 }
+
+const AccountTable: FC<{
+  account: Account;
+  quotes: Quotes;
+}> = ({ account, quotes }) => {
+  return (
+    <>
+      <thead>
+        <TR>
+          <TD colspan="2" className="pt-4 text-left text-xl">
+            {account.label}
+          </TD>
+        </TR>
+        <TR>
+          <TD className="text-gray-500">Symbol</TD>
+          <TD className="text-gray-500">Amt</TD>
+          <TD className="text-gray-500">Price</TD>
+          <TD className="text-gray-500">Val</TD>
+          <TD className="text-gray-500">Basis</TD>
+        </TR>
+      </thead>
+      <tbody>
+        {account.holdings.map((holding) => (
+          <HoldingRow
+            key={holding.symbol}
+            holding={holding}
+            quote={quotes[holding.symbol].quote}
+          />
+        ))}
+      </tbody>
+    </>
+  );
+};
+
+const HoldingRow: FC<{ holding: Holding; quote: Quote }> = ({
+  holding,
+  quote,
+}) => {
+  return (
+    <TR>
+      <TD title={quote?.companyName}>{holding.symbol}</TD>
+      <TD>{holding.quantity}</TD>
+      <TD>{format(quote.latestPrice)}</TD>
+      <TD>{format(holding.quantity * Number(quote.latestPrice))}</TD>
+      <TD>{holding.costBasis}</TD>
+    </TR>
+  );
+};
+
+const Table: FC = ({ children, ...props }) => {
+  return (
+    <table className="" {...props}>
+      {children}
+    </table>
+  );
+};
+
+const TR: FC = ({ children, ...props }) => {
+  return (
+    <tr className="" {...props}>
+      {children}
+    </tr>
+  );
+};
+
+const TD: FC<{
+  title?: string;
+  colspan?: string;
+  className?: string;
+}> = ({ children, className, ...props }) => {
+  return (
+    <td
+      className={`px-2 py-0.5 ${
+        className?.includes("text-left") ? "" : "text-right"
+      } ${className}`}
+      {...props}
+    >
+      {children}
+    </td>
+  );
+};
+
+const format = (input: string | number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number(input));
+};
 
 export default App;
