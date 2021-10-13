@@ -91,6 +91,32 @@ function App() {
           </tfoot>
         </Table>
       </section>
+      <div className="h-16"></div>
+      <header className="max-w-screen-xl mx-auto p-4 text-3xl">
+        Crypto Taxes
+      </header>
+      <section className="max-w-screen-xl mx-auto p-4">
+        <Table>
+          <TR>
+            <TD className="pt-4 text-xl">Crypto Value:</TD>
+          </TR>
+          <TR>
+            <TD className="pt-4 text-xl">Crypto Cost Basis:</TD>
+          </TR>
+          <TR>
+            <TD className="pt-4 text-xl">Crypto Profit:</TD>
+          </TR>
+          {portfolio.accounts
+            .filter((account) => account.crypto)
+            .map((account) => (
+              <AccountTable
+                key={account.label}
+                account={account}
+                quotes={quotes}
+              />
+            ))}
+        </Table>
+      </section>
     </div>
   );
 }
