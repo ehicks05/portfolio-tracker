@@ -104,7 +104,12 @@ const AccountTable: FC<{
       <thead>
         <TR>
           <TD colSpan={5} className="pt-4 text-left text-xl">
-            {account.label}
+            <div className="flex flex-row items-center gap-4">
+              <div>{account.label}</div>
+              <div className="px-2 py-1 text-xs bg-green-800 rounded-full ">
+                {account.crypto ? "crypto" : "traditional"}
+              </div>
+            </div>
           </TD>
         </TR>
         <TR>
