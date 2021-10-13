@@ -1,7 +1,7 @@
 import { useState, useEffect, FC } from "react";
 import _ from "lodash";
 import { getStockQuotes, getCryptoQuote } from "./api";
-import accounts from "./accounts.ts";
+import accounts from "./accounts";
 import { Portfolio, Account, Holding, Quote, Quotes } from "./types";
 
 function App() {
@@ -76,13 +76,13 @@ function App() {
               <TD>
                 {format(
                   portfolio.accounts.reduce((agg, curr) => {
-                    const total =
+                    return (
                       agg +
                       curr.holdings.reduce((agg, curr) => {
                         const price = quotes[curr.symbol].quote.latestPrice;
                         return (agg += curr.quantity * Number(price));
-                      }, 0);
-                    return _.round(total, 2);
+                      }, 0)
+                    );
                   }, 0)
                 )}
               </TD>
@@ -103,7 +103,7 @@ const AccountTable: FC<{
     <>
       <thead>
         <TR>
-          <TD colspan="2" className="pt-4 text-left text-xl">
+          <TD colSpan={5} className="pt-4 text-left text-xl">
             {account.label}
           </TD>
         </TR>
@@ -123,6 +123,20 @@ const AccountTable: FC<{
             quote={quotes[holding.symbol].quote}
           />
         ))}
+        <TR>
+          <TD>Total</TD>
+          <TD></TD>
+          <TD></TD>
+          <TD>
+            {format(
+              account.holdings.reduce((agg, curr) => {
+                const price = quotes[curr.symbol].quote.latestPrice;
+                return (agg += curr.quantity * Number(price));
+              }, 0)
+            )}
+          </TD>
+          <TD></TD>
+        </TR>
       </tbody>
     </>
   );
@@ -161,7 +175,7 @@ const TR: FC = ({ children, ...props }) => {
 
 const TD: FC<{
   title?: string;
-  colspan?: string;
+  colSpan?: number;
   className?: string;
 }> = ({ children, className, ...props }) => {
   return (
