@@ -1,4 +1,5 @@
 const FEDERAL_DEDUCTION = 12550;
+const STATE_DEDUCTION = 1000;
 
 const federal = [
   [0, 9950, 0.1],
@@ -40,7 +41,8 @@ const calculateTax = (income: number, schedule: any) => {
   return totalTaxes;
 };
 
-const calculateStateTax = (income: number) => calculateTax(income, state);
+const calculateStateTax = (income: number) =>
+  calculateTax(income - STATE_DEDUCTION, state);
 const calculateFederalTax = (income: number) =>
   calculateTax(income - FEDERAL_DEDUCTION, federal);
 const calculateLongTermTax = (income: number) =>
