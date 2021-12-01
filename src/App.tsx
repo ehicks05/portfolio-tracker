@@ -1,20 +1,20 @@
-import { useState, useEffect, FC } from "react";
-import _ from "lodash";
-import { getStockQuotes, getCryptoQuote } from "./api";
-import accounts from "./accounts";
-import { Portfolio, Account, Holding, Quote, Quotes } from "./types";
-import { calculateTaxes } from "./tax";
+import React, { useState, useEffect, FC } from 'react';
+import _ from 'lodash';
+import { getStockQuotes, getCryptoQuote } from './api';
+import accounts from './accounts';
+import {
+  Portfolio, Account, Holding, Quote, Quotes,
+} from './types';
+import { calculateTaxes } from './tax';
+import { format, formatPercent } from './utils';
 
-function App() {
+const App = () => {
   const [quotes, setQuotes] = useState<Quotes>({});
-  const [portfolio, setPortfolio] = useState<Portfolio>(accounts);
+  const [portfolio] = useState<Portfolio>(accounts);
 
   useEffect(() => {
     const fetchData = async () => {
-      const toSymbols = (accounts: Account[]) =>
-        accounts.flatMap((account) =>
-          account.holdings.map((holding) => holding.symbol)
-        );
+      const toSymbols = (accounts: Account[]) => accounts.flatMap((account) => account.holdings.map((holding) => holding.symbol));
 
       const [cryptoSymbols, tradSymbols] = _.partition(portfolio.accounts, {
         crypto: true,
@@ -23,14 +23,14 @@ function App() {
       const stockQuotes: Quotes = await getStockQuotes(tradSymbols);
 
       const cryptoQuotes = await Promise.all(
-        cryptoSymbols.map((cryptoSymbol) => getCryptoQuote(cryptoSymbol))
+        cryptoSymbols.map((cryptoSymbol) => getCryptoQuote(cryptoSymbol)),
       );
       const reduced: Quotes = cryptoQuotes.reduce(
         (agg, cur) => ({
           ...agg,
           [cur.symbol]: { quote: cur },
         }),
-        {}
+        {},
       );
 
       const quotes = Object.fromEntries([
@@ -52,7 +52,7 @@ function App() {
       <CryptoTaxesSection portfolio={portfolio} quotes={quotes} />
     </div>
   );
-}
+};
 
 const CryptoTaxesSection: FC<{ portfolio: Portfolio; quotes: Quotes }> = ({
   portfolio,
@@ -63,26 +63,25 @@ const CryptoTaxesSection: FC<{ portfolio: Portfolio; quotes: Quotes }> = ({
 
   const cryptoValue = cryptoHoldings.reduce((agg, curr) => {
     const price = quotes[curr.symbol].quote.latestPrice;
-    return (agg += curr.quantity * Number(price));
+    return (agg + curr.quantity * Number(price));
   }, 0);
 
   const cryptoBasis = cryptoHoldings.reduce(
-    (agg, curr) => (agg += curr.costBasis || 0),
-    0
+    (agg, curr) => (agg + (curr.costBasis || 0)),
+    0,
   );
 
   const cryptoProfit = cryptoValue - cryptoBasis;
 
   const [cryptoLongTermGains, cryptoShortTermGains] = cryptoHoldings.reduce(
     (agg, curr) => {
-      const value =
-        curr.quantity * Number(quotes[curr.symbol].quote.latestPrice);
+      const value = curr.quantity * Number(quotes[curr.symbol].quote.latestPrice);
       const profit = value - (curr.costBasis || 0);
       const longTermGains = profit * (1 - (curr.shortTerm || 0));
       const shortTermGains = profit * (curr.shortTerm || 0);
       return [agg[0] + longTermGains, agg[1] + shortTermGains];
     },
-    [0, 0]
+    [0, 0],
   );
 
   const taxes = calculateTaxes({
@@ -97,7 +96,7 @@ const CryptoTaxesSection: FC<{ portfolio: Portfolio; quotes: Quotes }> = ({
         <Table>
           <tbody>
             <TR>
-              <TD className="text-gray-500"></TD>
+              <TD className="text-gray-500" />
               <TD className="text-gray-500">Gain</TD>
               <TD colSpan={2} className="text-gray-500">
                 Fed
@@ -118,20 +117,20 @@ const CryptoTaxesSection: FC<{ portfolio: Portfolio; quotes: Quotes }> = ({
               <TD>{format(cryptoLongTermGains)}</TD>
               <TD>{format(taxes.longTermFedTax)}</TD>
               <TD>{formatPercent(taxes.longTermFedTaxRate)}</TD>
-              <TD></TD>
-              <TD></TD>
-              <TD></TD>
-              <TD></TD>
+              <TD />
+              <TD />
+              <TD />
+              <TD />
             </TR>
             <TR>
               <TD>Short Term </TD>
               <TD>{format(cryptoShortTermGains)}</TD>
               <TD>{format(taxes.shortTermFedTax)}</TD>
               <TD>{formatPercent(taxes.shortTermFedTaxRate)}</TD>
-              <TD></TD>
-              <TD></TD>
-              <TD></TD>
-              <TD></TD>
+              <TD />
+              <TD />
+              <TD />
+              <TD />
             </TR>
             <TR>
               <TD>Total</TD>
@@ -162,26 +161,25 @@ const CryptoGainsSection: FC<{ portfolio: Portfolio; quotes: Quotes }> = ({
 
   const cryptoValue = cryptoHoldings.reduce((agg, curr) => {
     const price = quotes[curr.symbol].quote.latestPrice;
-    return (agg += curr.quantity * Number(price));
+    return (agg + curr.quantity * Number(price));
   }, 0);
 
   const cryptoBasis = cryptoHoldings.reduce(
-    (agg, curr) => (agg += curr.costBasis || 0),
-    0
+    (agg, curr) => (agg + (curr.costBasis || 0)),
+    0,
   );
 
   const cryptoProfit = cryptoValue - cryptoBasis;
 
   const [cryptoLongTermGains, cryptoShortTermGains] = cryptoHoldings.reduce(
     (agg, curr) => {
-      const value =
-        curr.quantity * Number(quotes[curr.symbol].quote.latestPrice);
+      const value = curr.quantity * Number(quotes[curr.symbol].quote.latestPrice);
       const profit = value - (curr.costBasis || 0);
       const longTermGains = profit * (1 - (curr.shortTerm || 0));
       const shortTermGains = profit * (curr.shortTerm || 0);
       return [agg[0] + longTermGains, agg[1] + shortTermGains];
     },
-    [0, 0]
+    [0, 0],
   );
 
   return (
@@ -198,10 +196,10 @@ const CryptoGainsSection: FC<{ portfolio: Portfolio; quotes: Quotes }> = ({
               />
             ))}
             <TR>
-              <TD className="pt-4 text-xl">{"Summary"}</TD>
+              <TD className="pt-4 text-xl">Summary</TD>
             </TR>
             <TR>
-              <TD className="text-gray-500"></TD>
+              <TD className="text-gray-500" />
               <TD className="text-gray-500">Val</TD>
               <TD className="text-gray-500">Basis</TD>
               <TD className="text-gray-500">Gain</TD>
@@ -226,172 +224,163 @@ const CryptoGainsSection: FC<{ portfolio: Portfolio; quotes: Quotes }> = ({
 const PortfolioSection: FC<{ portfolio: Portfolio; quotes: Quotes }> = ({
   portfolio,
   quotes,
-}) => {
-  return (
-    <div>
-      <header className="text-3xl">Portfolio</header>
-      <section className="p-4">
-        <Table>
-          <tbody>
-            {portfolio.accounts.map((account) => (
-              <AccountTable
-                key={account.label}
-                account={account}
-                quotes={quotes}
-              />
-            ))}
-          </tbody>
-          <tfoot>
-            <TR>
-              <TD className="pt-4 text-xl">{"Summary"}</TD>
-            </TR>
-            <TR>
-              <TD></TD>
-              <TD></TD>
-              <TD></TD>
-              <TD className="text-gray-500">Val</TD>
-              <TD></TD>
-            </TR>
-            <TR>
-              <TD>Total</TD>
-              <TD></TD>
-              <TD></TD>
-              <TD>
-                {format(
-                  portfolio.accounts.reduce((agg, curr) => {
-                    return (
-                      agg +
-                      curr.holdings.reduce((agg, curr) => {
+}) => (
+  <div>
+    <header className="text-3xl">Portfolio</header>
+    <section className="p-4">
+      <Table>
+        <tbody>
+          {portfolio.accounts.map((account) => (
+            <AccountTable
+              key={account.label}
+              account={account}
+              quotes={quotes}
+            />
+          ))}
+        </tbody>
+        <tfoot>
+          <TR>
+            <TD className="pt-4 text-xl">Summary</TD>
+          </TR>
+          <TR>
+            <TD />
+            <TD />
+            <TD />
+            <TD className="text-gray-500">Val</TD>
+            <TD />
+          </TR>
+          <TR>
+            <TD>Total</TD>
+            <TD />
+            <TD />
+            <TD>
+              {format(
+                portfolio.accounts.reduce((agg, curr) => (
+                  agg
+                      + curr.holdings.reduce((agg, curr) => {
                         const price = quotes[curr.symbol].quote.latestPrice;
-                        return (agg += curr.quantity * Number(price));
+                        return (agg + curr.quantity * Number(price));
                       }, 0)
-                    );
-                  }, 0)
-                )}
-              </TD>
-              <TD></TD>
-            </TR>
-          </tfoot>
-        </Table>
-      </section>
-    </div>
-  );
-};
+                ), 0),
+              )}
+            </TD>
+            <TD />
+          </TR>
+        </tfoot>
+      </Table>
+    </section>
+  </div>
+);
 
 const AccountTable: FC<{ account: Account; quotes: Quotes }> = ({
   account,
   quotes,
-}) => {
-  return (
-    <>
-      <TR>
-        <TD colSpan={5} className="pt-4 text-left text-xl">
-          <div className="flex flex-row items-center gap-4">
-            <div>{account.label}</div>
-            <div className="px-2 py-1 text-xs bg-green-800 rounded-full ">
-              {account.crypto ? "crypto" : "traditional"}
-            </div>
+}) => (
+  <>
+    <TR>
+      <TD colSpan={5} className="pt-4 text-left text-xl">
+        <div className="flex flex-row items-center gap-4">
+          <div>{account.label}</div>
+          <div className="px-2 py-1 text-xs bg-green-800 rounded">
+            {account.crypto ? 'crypto' : 'traditional'}
           </div>
-        </TD>
-      </TR>
-      <TR>
-        <TD className="text-gray-500">Symbol</TD>
-        <TD className="text-gray-500">Amt</TD>
-        <TD className="text-gray-500">Price</TD>
-        <TD className="text-gray-500">Val</TD>
-      </TR>
+        </div>
+      </TD>
+    </TR>
+    <TR>
+      <TD className="text-gray-500">Symbol</TD>
+      <TD className="text-gray-500">Amt</TD>
+      <TD className="text-gray-500">Price</TD>
+      <TD className="text-gray-500">Val</TD>
+    </TR>
 
-      {account.holdings.map((holding) => (
-        <HoldingRow
-          key={holding.symbol}
-          holding={holding}
-          quote={quotes[holding.symbol].quote}
-        />
-      ))}
-      <TR>
-        <TD>Total</TD>
-        <TD></TD>
-        <TD></TD>
-        <TD>
-          {format(
-            account.holdings.reduce((agg, curr) => {
-              const price = quotes[curr.symbol].quote.latestPrice;
-              return (agg += curr.quantity * Number(price));
-            }, 0)
-          )}
-        </TD>
-      </TR>
-    </>
-  );
-};
+    {account.holdings.map((holding) => (
+      <HoldingRow
+        key={holding.symbol}
+        holding={holding}
+        quote={quotes[holding.symbol].quote}
+      />
+    ))}
+    <TR>
+      <TD>Total</TD>
+      <TD />
+      <TD />
+      <TD>
+        {format(
+          account.holdings.reduce((agg, curr) => {
+            const price = quotes[curr.symbol].quote.latestPrice;
+            return (agg + curr.quantity * Number(price));
+          }, 0),
+        )}
+      </TD>
+    </TR>
+  </>
+);
 
 const AccountGainsTable: FC<{ account: Account; quotes: Quotes }> = ({
   account,
   quotes,
-}) => {
-  return (
-    <>
-      <TR>
-        <TD colSpan={5} className="pt-4 text-left text-xl">
-          <div className="flex flex-row items-center gap-4">
-            <div>{account.label}</div>
-            <div className="px-2 py-1 text-xs bg-green-800 rounded-full ">
-              {account.crypto ? "crypto" : "traditional"}
-            </div>
+}) => (
+  <>
+    <TR>
+      <TD colSpan={5} className="pt-4 text-left text-xl">
+        <div className="flex flex-row items-center gap-4">
+          <div>{account.label}</div>
+          <div className="px-2 py-1 text-xs bg-green-800 rounded">
+            {account.crypto ? 'crypto' : 'traditional'}
           </div>
-        </TD>
-      </TR>
-      <TR>
-        <TD className="text-gray-500">Symbol</TD>
-        <TD className="text-gray-500">Val</TD>
-        <TD className="text-gray-500">Basis</TD>
-        <TD className="text-gray-500">Gain</TD>
-        <TD className="text-gray-500">LTCG</TD>
-        <TD className="text-gray-500">STCG</TD>
-      </TR>
+        </div>
+      </TD>
+    </TR>
+    <TR>
+      <TD className="text-gray-500">Symbol</TD>
+      <TD className="text-gray-500">Val</TD>
+      <TD className="text-gray-500">Basis</TD>
+      <TD className="text-gray-500">Gain</TD>
+      <TD className="text-gray-500">LTCG</TD>
+      <TD className="text-gray-500">STCG</TD>
+    </TR>
 
-      {account.holdings.map((holding) => (
-        <HoldingTaxRow
-          key={holding.symbol}
-          holding={holding}
-          quote={quotes[holding.symbol].quote}
-        />
-      ))}
-      <TR>
-        <TD>Total</TD>
-        <TD>
-          {format(
-            account.holdings.reduce((agg, curr) => {
-              const price = quotes[curr.symbol].quote.latestPrice;
-              return (agg += curr.quantity * Number(price));
-            }, 0)
-          )}
-        </TD>
-        <TD>
-          {format(
-            account.holdings.reduce(
-              (agg, curr) => (agg += curr.costBasis || 0),
-              0
-            )
-          )}
-        </TD>
-        <TD>
-          {format(
-            account.holdings.reduce((agg, curr) => {
-              const value =
-                curr.quantity * Number(quotes[curr.symbol].quote.latestPrice);
-              const basis = curr.costBasis || 0;
-              const profit = value - basis;
-              return (agg += profit);
-            }, 0)
-          )}
-        </TD>
-        <TD></TD>
-        <TD></TD>
-      </TR>
-    </>
-  );
-};
+    {account.holdings.map((holding) => (
+      <HoldingTaxRow
+        key={holding.symbol}
+        holding={holding}
+        quote={quotes[holding.symbol].quote}
+      />
+    ))}
+    <TR>
+      <TD>Total</TD>
+      <TD>
+        {format(
+          account.holdings.reduce((agg, curr) => {
+            const price = quotes[curr.symbol].quote.latestPrice;
+            return (agg + curr.quantity * Number(price));
+          }, 0),
+        )}
+      </TD>
+      <TD>
+        {format(
+          account.holdings.reduce(
+            (agg, curr) => (agg + (curr.costBasis || 0)),
+            0,
+          ),
+        )}
+      </TD>
+      <TD>
+        {format(
+          account.holdings.reduce((agg, curr) => {
+            const value = curr.quantity * Number(quotes[curr.symbol].quote.latestPrice);
+            const basis = curr.costBasis || 0;
+            const profit = value - basis;
+            return (agg + profit);
+          }, 0),
+        )}
+      </TD>
+      <TD />
+      <TD />
+    </TR>
+  </>
+);
 
 const HoldingTaxRow: FC<{ holding: Holding; quote: Quote }> = ({
   holding,
@@ -417,61 +406,40 @@ const HoldingTaxRow: FC<{ holding: Holding; quote: Quote }> = ({
 const HoldingRow: FC<{ holding: Holding; quote: Quote }> = ({
   holding,
   quote,
-}) => {
-  return (
-    <TR>
-      <TD title={quote?.companyName}>{holding.symbol}</TD>
-      <TD>{holding.quantity}</TD>
-      <TD>{format(quote.latestPrice)}</TD>
-      <TD>{format(holding.quantity * Number(quote.latestPrice))}</TD>
-    </TR>
-  );
-};
+}) => (
+  <TR>
+    <TD title={quote?.companyName}>{holding.symbol}</TD>
+    <TD>{holding.quantity}</TD>
+    <TD>{format(quote.latestPrice)}</TD>
+    <TD>{format(holding.quantity * Number(quote.latestPrice))}</TD>
+  </TR>
+);
 
-const Table: FC = ({ children, ...props }) => {
-  return (
-    <table className="" {...props}>
-      {children}
-    </table>
-  );
-};
+const Table: FC = ({ children, ...props }) => (
+  <table className="" {...props}>
+    {children}
+  </table>
+);
 
-const TR: FC = ({ children, ...props }) => {
-  return (
-    <tr className="" {...props}>
-      {children}
-    </tr>
-  );
-};
+const TR: FC = ({ children, ...props }) => (
+  <tr className="" {...props}>
+    {children}
+  </tr>
+);
 
 const TD: FC<{
   title?: string;
   colSpan?: number;
   className?: string;
-}> = ({ children, className, ...props }) => {
-  return (
-    <td
-      className={`px-2 py-0.5 ${
-        className?.includes("text-left") ? "" : "text-right"
-      } ${className}`}
-      {...props}
-    >
-      {children}
-    </td>
-  );
-};
-
-const format = (input: string | number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(input));
-};
-
-const formatPercent = (input: string | number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "percent",
-  }).format(Number(input));
-};
+}> = ({ children, className, ...props }) => (
+  <td
+    className={`px-2 py-0.5 ${
+      className?.includes('text-left') ? '' : 'text-right'
+    } ${className}`}
+    {...props}
+  >
+    {children}
+  </td>
+);
 
 export default App;

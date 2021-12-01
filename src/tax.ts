@@ -27,18 +27,13 @@ const STATE_SCHEDULE = [
   [5_000_001, 900_000_000, 0.1075],
 ];
 
-const calculateTax = (income: number, schedule: any) => {
-  let totalTaxes = 0;
-  for (const interval of schedule) {
-    if (income < interval[1]) {
-      totalTaxes += (income - interval[0]) * interval[2];
-      break;
-    } else {
-      totalTaxes += (interval[1] - interval[0]) * interval[2];
-    }
-  }
-  return totalTaxes;
-};
+const calculateTax = (income: number, schedule: any[]) => schedule.reduce((total, [start, end, rate]) => {
+  if (income < start) return total;
+
+  return total + income < end
+    ? (income - start) * rate
+    : (end - start) * rate;
+}, 0);
 
 const calculateTaxes = ({
   shortTerm,
@@ -53,13 +48,10 @@ const calculateTaxes = ({
   const stateTaxRate = stateTax / income;
 
   // federal
-  const shortTermFederalIncome =
-    shortTerm >= FEDERAL_DEDUCTION ? shortTerm - FEDERAL_DEDUCTION : 0;
-  let remainingDeduction =
-    shortTerm >= FEDERAL_DEDUCTION ? 0 : FEDERAL_DEDUCTION - shortTerm;
+  const shortTermFederalIncome = shortTerm >= FEDERAL_DEDUCTION ? shortTerm - FEDERAL_DEDUCTION : 0;
+  const remainingDeduction = shortTerm >= FEDERAL_DEDUCTION ? 0 : FEDERAL_DEDUCTION - shortTerm;
 
-  const longTermFederalIncome =
-    longTerm >= remainingDeduction ? longTerm - remainingDeduction : 0;
+  const longTermFederalIncome = longTerm >= remainingDeduction ? longTerm - remainingDeduction : 0;
 
   const shortTermFedTax = calculateTax(shortTermFederalIncome, FED_SCHEDULE);
   const shortTermFedTaxRate = shortTermFedTax / shortTermFederalIncome;
@@ -72,7 +64,7 @@ const calculateTaxes = ({
 
   const longTermFedTax = calculateTax(
     longTermFederalIncome,
-    adjustedLongTermSchedule
+    adjustedLongTermSchedule,
   );
   const longTermFedTaxRate = longTermFedTax / longTermFederalIncome;
 
